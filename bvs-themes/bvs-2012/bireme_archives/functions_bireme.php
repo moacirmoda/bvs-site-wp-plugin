@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * DEfinições específicas para BIREME
+ * Definições específicas para BIREME
  *
  */
  /* Load up our theme options page and related code. */
@@ -18,7 +18,10 @@ load_plugin_textdomain( 'vhl', false,  BVS_PLUGIN_DIR . '/languages' );
 
 if ( is_admin() ) require_once( TEMPLATEPATH . '/bireme_archives/admin_settings.php' );
 
+global $default_settings;
 $settings = get_option( "wp_bvs_theme_settings" );
+if ( empty( $settings ) ) $settings = $default_settings;
+
 $layout = $settings['layout'];
 $total_columns = $layout['total'];
 $top_sidebar = $layout['top-sidebar'];
@@ -238,7 +241,7 @@ function html_tidy($src){
     $x->loadHTML('<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />'.$src);
     $x->formatOutput = true;
     $ret = preg_replace('~<(?:!DOCTYPE|/?(?:html|body|head))[^>]*>s*~i', '', $x->saveHTML());
-    $done=trim(str_replace('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">','',$ret));
+    $done = trim(str_replace('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">','',$ret));
     return $done;
 }
 
@@ -253,17 +256,29 @@ add_filter( 'http_request_args', 'http_request_local', 5, 2 );
 function vhl_breadcrumb() {
     global $mlf_config;
     global $site_lang;
+    global $post;
+
     $lang = '';
 
     if(is_plugin_active('multi-language-framework/multi-language-framework.php')) {
-        if ( $mlf_config['default_language'] != $site_lang ) $lang = $site_lang;
+        if ( $mlf_config['default_language'] != $site_lang ) $lang = $site_lang . "/";
+    }
+    elseif(is_plugin_active('polylang/polylang.php')) {
+        if (function_exists('pll_current_language'))
+            $site_language = pll_current_language();
+
+        if (function_exists('pll_default_language'))
+            $default_language = pll_default_language();
+
+        if ( isset($default_language) && isset($site_language) && $default_language != $site_language )
+            $lang = $site_language . "/";
     }
 
     $breadcrumb = '';
     $title = get_the_title();
-    $before_bc = '<div class="breadcrumb"><a href="' . esc_url( home_url( "/".( $lang ) ) ) . '" class="home">Home</a> > ';
+    $before_bc = '<div class="breadcrumb"><a href="' . esc_url( home_url( "/" . $lang ) ) . '" class="home">Home</a> > ';
     $after_bc = '</div>';
-    $ancestors = get_post_ancestors();
+    $ancestors = get_post_ancestors($post->ID);
     $ancestors = array_reverse($ancestors);
 
     if( count($ancestors) > 0 ) {
@@ -277,5 +292,15 @@ function vhl_breadcrumb() {
 
     echo $before_bc . $breadcrumb . $after_bc;
 }
+
+function theme_slug_render_title() {
+    $title  = get_bloginfo('name');
+    if ( is_front_page() || is_home() )
+        $title .= get_bloginfo('description') ? ' | ' . get_bloginfo('description') : '';
+?>
+<title><?php echo $title; ?></title>
+<?php
+}
+add_action( 'wp_head', 'theme_slug_render_title' );
 
 ?>

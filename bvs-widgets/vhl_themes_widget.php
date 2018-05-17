@@ -10,9 +10,9 @@ if (function_exists('add_theme_support')) {
 /*** VHL Themes Widget ****************/
 class VHL_Themes_Widget extends WP_Widget {
 
-    function VHL_Themes_Widget() {
+    function __construct() {
         $widget_ops = array('classname' => 'vhl-themes', 'description' => __('Adds a VHL theme on your site', 'vhl') );
-        parent::WP_Widget('vhl_themes', __('VHL Themes', 'vhl'), $widget_ops);
+        parent::__construct('vhl_themes', __('VHL Themes', 'vhl'), $widget_ops);
     }
 
     function widget($args, $instance) {
@@ -22,12 +22,34 @@ class VHL_Themes_Widget extends WP_Widget {
         if ( $instance['collection_id'] != '' ){
             extract($instance);
 
+            $collection_id = $instance['collection_id'];
             $post_type_name = $this->get_post_type_name();
+
+            if ( function_exists( 'pll_current_language' ) ) {
+                global $polylang;
+                
+                $lang = pll_current_language();
+                $default_language = pll_default_language();
+                $post_ids = $polylang->model->get_translations($post_type_name, $collection_id);
+
+                if ( $post_ids[$lang] ) $collection_id = $post_ids[$lang];
+            }
+
             $id = $collection_id;
 
-            echo "<div class='spacer clear'></div>";
+            if ( !empty( $extra_css ) ) {
+                $dom = new DOMDocument;
+                $dom->loadHTML($before_widget);
+                $elements = $dom->getElementsByTagName('aside');
+                foreach($elements as $el) {
+                    $el->setAttribute('class', 
+                        $el->getAttribute('class') . ' ' . $extra_css);
+                }
+                $before_widget = $elements->item(0)->C14N();
+                $before_widget = substr($before_widget, 0, strpos($before_widget, '><')) . '>';
+            }
+
             echo $before_widget;
-            echo "<div class='$extra_css'>";
 
             // title
             $col_title = get_the_title($id);
@@ -44,7 +66,7 @@ class VHL_Themes_Widget extends WP_Widget {
                 echo "<ul>";
             }
 
-            foreach(get_children(array('post_type' => 'vhl_collection', 'post_parent' =>$id, 'orderby' => 'menu_order', 'order' => 'ASC')) as $child) {
+            foreach(get_children(array('post_type' => 'vhl_collection', 'post_parent' => $id, 'orderby' => 'menu_order', 'order' => 'ASC')) as $child) {
 
                 if ($child->post_status == "publish") {
 
@@ -76,9 +98,7 @@ class VHL_Themes_Widget extends WP_Widget {
                 }
             }
             echo "</ul>";
-	    print '<div class="spacer"></div>';
-            
-            echo "</div>";
+            print '<div class="spacer"></div>';
             echo $after_widget;
         }
     }

@@ -174,7 +174,7 @@ class VHL_PageLinksTo {
         // Really strange, but page_link gives us an ID and post_link gives us a post object
         $id = ( is_object( $post ) && $post->ID ) ? $post->ID : $post;
 
-        if ( $links[$id] )
+        if ( array_key_exists($id, $links) )
             $link = esc_url( $links[$id] );
 
         return $link;

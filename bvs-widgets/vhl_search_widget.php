@@ -3,9 +3,9 @@
 /*** VHL Search Widget ****************/
 class VHL_Search_Widget extends WP_Widget {
 
-    function VHL_Search_Widget() {
+    function __construct() {
         $widget_ops = array('classname' => 'vhl-search', 'description' => __('Adds a VHL search on your site', 'vhl') );
-        parent::WP_Widget('vhl_search', __('VHL Search', 'vhl'), $widget_ops);
+        parent::__construct('vhl_search', __('VHL Search', 'vhl'), $widget_ops);
         add_action( 'wp_footer', array(&$this, 'footer'), 20, 1 );
     }
  
@@ -16,18 +16,24 @@ class VHL_Search_Widget extends WP_Widget {
         // network lang parameter only accept 2 letters language code (pt, es, en)
         $lng = substr($current_language, 0,2);
 
+        $title = $instance['title'];
+
+        if ( function_exists( 'pll_current_language' ) ) {
+            $lng = pll_current_language();
+            $title = pll_translate_string($instance['title'], $lng);
+        }
+
         echo $before_widget;
-            if($instance['title']) echo $before_title, $instance['title'], $after_title;
+            if( $title ) echo $before_title, $title, $after_title;
 
              echo '<form action="' . $instance['action'] . '" method="get" id="searchForm" >';
              echo '   <input type="hidden" name="lang" value="' . $lng . '" />';
              echo '   <input type="hidden" name="home_url" value="' . get_bloginfo('home') . '" />';
              echo '   <input type="hidden" name="home_text" value="' . get_bloginfo('name') . '" />';
-             echo '   <label for="vhl-search-input"></label>';
-             echo '   <input type="text" id="vhl-search-input" class="vhl-search-input" name="q" value="' .__('Search') . '" />';
-             echo '   <input type="submit" class="vhl-search-submit submit" name="submit" value="' .__('Search') .'" />';
+             echo '   <label for="vhl-search-input" style="display: none;">' .__('Search', 'vhl'). '</label>';
+             echo '   <input type="text" id="vhl-search-input" class="vhl-search-input" name="q" value="' .__('Search', 'vhl') . '" />';
+             echo '   <input type="submit" class="vhl-search-submit submit" name="submit" value="' .__('Search', 'vhl') .'" />';
              echo '</form>';
-
         echo $after_widget;
     }
  

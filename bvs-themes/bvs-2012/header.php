@@ -32,7 +32,6 @@ if(is_plugin_active('multi-language-framework/multi-language-framework.php'))
 	<head>
 	<meta http-equiv="content-type" content="text/html; charset=<?php bloginfo( 'charset' ); ?>" />
 	<meta name="viewport" content="width=device-width, user-scalable=no" />
-	<title><?php wp_title( '|', true, 'right' ); ?></title>
 	<link rel="profile" href="http://gmpg.org/xfn/11" />
 	<link rel="pingback" href="<?php bloginfo( 'pingback_url' ); ?>" />
 	
@@ -54,13 +53,37 @@ if(is_plugin_active('multi-language-framework/multi-language-framework.php'))
 		<div class="header">
 			<div class="bar">
 				<div id="otherVersions">
-					<?php if(function_exists('mlf_links_to_languages')) { mlf_links_to_languages(); } ?>	
+					<?php
+						if ( function_exists( 'mlf_links_to_languages' ) ) {
+							mlf_links_to_languages();
+						} elseif ( function_exists( 'pll_the_languages' ) ) {
+							$args = array(
+								'dropdown' => 0,
+								'show_names' => 1,
+								'display_names_as' => 'name',
+								'show_flags' => 0,
+								'hide_if_empty' => 1,
+								'force_home' => 0,
+								'echo' => 0,
+								'hide_if_no_translation' => 1,
+								'hide_current' => 1,
+								'post_id' => null,
+								'raw' => 0
+							);
+
+							echo '<ul>' . pll_the_languages( $args ) . '</ul>';
+						}
+					?>
 				</div>
 				<?php
 				// Conditional to show contact link.
-				if(is_plugin_active('contact-form-7/wp-contact-form-7.php') && !empty($contactPage)) { ?>
-					<div id="contact"> 
-						<span><a href="<?php echo get_permalink($contactPage); ?>"><?php echo get_the_title($contactPage); ?></a></span>
+				if(is_plugin_active('contact-form-7/wp-contact-form-7.php') && isset($contactPage) && !empty($contactPage)) { ?>
+					<div id="contact">
+						<?php if ( function_exists( 'pll_get_post' ) ) : ?>
+							<span><a href="<?php echo get_permalink(pll_get_post($contactPage)); ?>"><?php echo get_the_title(pll_get_post($contactPage)); ?></a></span>
+						<?php else : ?>
+							<span><a href="<?php echo get_permalink($contactPage); ?>"><?php echo get_the_title($contactPage); ?></a></span>
+						<?php endif; ?>
 					</div>
 				<?php } ?>
 				<?php if ($headerMenu != true) wp_nav_menu( array( 'fallback_cb' => 'false' ) ); ?>
